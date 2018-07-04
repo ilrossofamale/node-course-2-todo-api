@@ -1,9 +1,5 @@
 const {MongoClient, ObjectID} = require('mongodb');
 
-
-
-
-
 MongoClient.connect('mongodb://localhost:27017/TodoApp', {useNewUrlParser: true}, (err, client) => {
 	if(err) {
 		//se non usassi il return il programma andrebbe avanti con l'esecuzione
