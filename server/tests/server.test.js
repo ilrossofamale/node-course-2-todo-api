@@ -83,7 +83,7 @@ describe('GET /todos', () => {
 
 describe('GET /todos:id', () => {
 
-	it('Restituisce un documetno in base all\'id', (done) => {
+	it('Restituisce un documento in base all\'id', (done) => {
 
 		request(app)
 		.get(`/todos/${todos[0]._id.toHexString()}`)//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
@@ -108,6 +108,46 @@ describe('GET /todos:id', () => {
 	it('Documento non trovato id non valido 404', (done) => {
 		request(app)
 		.get('/todos/123abc')
+		.expect(404)
+		.end(done);
+	});
+});
+
+
+
+describe('DELETE /todos/:id', () => {
+	it('Dovrebbe cancellare il documento', (done) => {
+		var hexId = todos[1]._id.toHexString();
+
+		request(app)
+		.delete(`/todos/${hexId}`)
+		.expect(200)
+		.expect((res)=> {
+			expect(res.body.todo._id).toBe(hexId);
+		})
+		.end((err, res) => {
+			if(err) {
+				return done(err);
+			}
+			Todo.findById(hexId).then((todo) => {
+				expect(todo).toBeFalsy();
+				done();
+			}).catch((e) => done(e));
+		})
+	});
+
+	it('Restituisce 404 se il documento non esiste', (done) => {
+		var hexId = new ObjectId().toHexString();
+		request(app)
+		.delete(`/todos/${hexId}`)
+		.expect(404)
+		.end(done);
+
+	});
+
+	it('Restituisce 404 se l\'id non è valido', (done) => {
+		request(app)
+		.delete('/todos/123abc')
 		.expect(404)
 		.end(done);
 	});
