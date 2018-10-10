@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;//Heroku
 
 app.use(bodyParser.json());
 
-app.post('/todos', (req, res) => {c
+app.post('/todos', (req, res) => {
 	var todo = new Todo({
 		text: req.body.text
 	})
