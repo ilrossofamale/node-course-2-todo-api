@@ -99,7 +99,6 @@ app.patch('/todos/:id', (req, res) => {
 app.post('/users', (req, res) => {
 	var body = _.pick(req.body, ['email','password']);
 	var user = new Users(body);
-
 	user.save().then(() => {
 		return user.generateAuthToken();
 	}).then((token) => {
@@ -110,10 +109,10 @@ app.post('/users', (req, res) => {
 });
 
 
-
-app.get('/users/me', authenticate, (req, res) => {
+app.get('/users/me', authenticate, (req, res) => { //utilizzo la funzione authenticate come middleware per controllare l'autenticazione con il tokens
 	res.send(req.user);
 });
+
 
 app.listen(port, () => {
 	console.log(`Avviata sulla porta ${port}`);
