@@ -5,16 +5,17 @@ const bcrypt = require('bcryptjs');//modulo di encrypt
 
 var password = '123abc!';
 
-
-bcrypt.genSalt(10, (err, salt) => {
-	bcrypt.hash(password, salt, (err, hash) => {
+//HASHING PASSWORD
+bcrypt.genSalt(10, (err, salt) => { //questo metodo genera automaticamente il salt number per rendere la password più sicura
+	bcrypt.hash(password, salt, (err, hash) => { //('la password selezionata, il salt number generato automaticametne, callback')
 		console.log(hash);
 	})
 });
 
-var hashedPassword = '$2a$10$it5WxUky/bU1SPlpE.Hur.N6t./fLdOkzev8IIQ.44yYZy.zvFNZm';
 
 
-bcrypt.compare(password, hashedPassword, (err, res) => {
+//COMPARE HASHING PASSWORD
+var hashedPassword = '$2a$10$pCAuF9bMZ25aZin.md9w2OtUb/xCAYlr6vVfJ3mygif49wH.zgcm';
+bcrypt.compare(password, hashedPassword, (err, res) => { //('la password selezionata, la password criptata, callback')
 	console.log(res);
 });
