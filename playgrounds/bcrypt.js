@@ -15,7 +15,7 @@ bcrypt.genSalt(10, (err, salt) => { //questo metodo genera automaticamente il sa
 
 
 //COMPARE HASHING PASSWORD
-var hashedPassword = '$2a$10$pCAuF9bMZ25aZin.md9w2OtUb/xCAYlr6vVfJ3mygif49wH.zgcm';
+var hashedPassword = '$2a$10$rlnalkcSM.Jcz0XocYcN..E1HyKpW9HZQLbv1WKqMhFIaYJvRxrna';
 bcrypt.compare(password, hashedPassword, (err, res) => { //('la password selezionata, la password criptata, callback')
-	console.log(res);
+	console.log(!res);
 });

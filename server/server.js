@@ -114,6 +114,24 @@ app.get('/users/me', authenticate, (req, res) => { //utilizzo la funzione authen
 });
 
 
+app.post('/users/login', (req,res) => {
+
+	var body = _.pick(req.body, ['email','password']);
+	Users.findByCredential(body.email, body.password).then((user) => {
+
+		return user.generateAuthToken().then((token) => {
+			res.header('x-auth', token).send(user);
+		})
+
+	}).catch((err) => {
+		res.status(400).send();
+	});
+
+
+	//res.send(body);
+})
+
+
 app.listen(port, () => {
 	console.log(`Avviata sulla porta ${port}`);
 });
