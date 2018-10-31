@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+//DEFINIZIONE DELLA STRUTTA DEI DATI PER L'UTENTE
 var UserSchema = mongoose.Schema({	//NON SI POSSONO AGGIUNGERE METODI AL model, PER FARE QUESTO VA USATO Schema
 	email: {
 		type: String,

@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-//DEFINISCO LO SCHEMA DELLA COLLEZIONE
+//DEFINISCO LO SCHEMA DELLA COLLEZIONE PER I TODO
 const Todo = mongoose.model('Todo',{
 	text: {
 		type: String,

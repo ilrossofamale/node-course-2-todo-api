@@ -6,26 +6,16 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server'); //chiamo i file locali
 const {Todo} = require('./../models/todo'); //chiamo i file locali
-
-//Array dummy di todos per fverifica funzionalità get
-const todos = [{
-	_id: new ObjectId,
-	text: "Primo testo todo test"
-},{
-	_id: new ObjectId,
-	text: "Secondo testo todo test",
-	completed: true,
-	completedAt: 333
-}];
+const {Users} = require('./../models/users'); //chiamo i file locali
+const {todos,populateTodos,users,populateUsers}  = require('./seed/seed.js'); //chiamo i file locali
 
 
-//questa funzione mi serve per far validare l'assertiona riga 42, prima di ogni test svuoto il db e gli inietto l'arrey dummy
-beforeEach((done) => {
-	Todo.remove({}).then(() => {
-		Todo.insertMany(todos);
-	}).then(() => done());
-});
 
+//creo i dummy secondo le impostazioni dei modelli
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
+//I TEST!!!
 describe('POST /todos', () => {
 	it('Crea una nuova attività', (done) => {// il parametro done va passato perchè viene utilizzzato per funzioni di tipo asincrono altrimenti il test finisce in maniera sincrona e non viene eseguito
 		var text = 'TEST attività testo';
@@ -194,8 +184,87 @@ describe('PATCH /todos/:id', () => {
 		})
 		.end(done);
 	});
+});
 
 
+describe('GET /users/me', () => {
+
+	it('Restituisce se l\'utene è autenticato', (done) => {
+		request(app)
+		.get('/users/me')
+		.set('x-auth',users[0].tokens[0].token)//se utente è autenticato ha settato questo parametro
+		.expect(200)
+		.expect((res) => {
+			expect(res.body._id).toBe(users[0]._id.toHexString());
+			expect(res.body.email).toBe(users[0].email);
+		})
+		.end(done);
+	});
+
+	it('Restituisce 401 se l\'utene non è autenticato', (done) => {
+		request(app)
+		.get('/users/me')
+		.expect(401)
+		.expect((res) => {
+			expect(res.body).toEqual({});
+		})
+		.end(done);
+	});
+
+});
 
 
-})
+describe('POST /users', () => {
+
+	it('Creare utente', (done) => {
+		//test se passo dati validi
+		var email = 'example@example.com';
+		var password = '123mnb!';
+		request(app)
+		.post('/users')
+		.send({email,password})
+		.expect(200)
+		.expect((res) => {
+			expect(res.headers['x-auth']).toExist();
+			expect(res.body._id).toExist();
+			expect(res.body.email).toBe(email);
+		})
+		.end((err) => {
+			//invece di end(done) e chiudere il test utilzzo questo funzione custom per verificare i dati, non solo la loro esistenza
+			if(err){
+				return done(err);
+			}
+			Users.findOne({email}).then((user) => {
+				expect(user).toExist();
+				expect(user.password).toNotBe(password);//confronto la variabile password con la password salvata per verificare che quella nel db sia codificata
+				done();
+			})
+		});
+	});
+
+	it('Restituira errore di validazione se la richiesta è invalida', (done) => {
+		//test se i dati non sono validi
+		//email o password non validi
+		request(app)
+		.post('/users')
+		.send({
+			email : 'example#example.com',
+			password : 'mnb!'
+		})
+		.expect(400)
+		.end(done);
+	});
+
+	it('Non crea utente se la mail è duplicata', (done) => {
+		//controlla unicità della mail
+		request(app)
+		.post('/users')
+		.send({
+			email : users[0].email,
+			password : '123abc!'
+		})
+		.expect(400)
+		.end(done);
+	});
+
+});
