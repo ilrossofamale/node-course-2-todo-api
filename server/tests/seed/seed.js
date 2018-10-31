@@ -20,17 +20,23 @@ const users = [{
 	_id: userTwoId,
 	email:'pietro.baccanelli@gmail.com',
 	password:'passwordTwo',
+	tokens : [{
+		access: 'auth',
+		token: jwt.sign({_id: userTwoId, access: 'auth'}, 'abc123').toString()
+	}]
 }]
 
 //Array dummy di todos
 const todos = [{
 	_id: new ObjectId,
-	text: "Primo testo todo test"
+	text: "Primo testo todo test",
+	_creator: userOneId
 },{
 	_id: new ObjectId,
 	text: "Secondo testo todo test",
 	completed: true,
-	completedAt: 333
+	completedAt: 333,
+	_creator: userTwoId
 }];
 
 

@@ -22,6 +22,7 @@ describe('POST /todos', () => {
 		//request del test
 		request(app)// request verso l'oggetto app esportato da server.js che devo testare
 		.post('/todos') // URL a cui PASSARE I DATI
+		.set('x-auth',users[0].tokens[0].token) //Autenticazione attraverso il token
 		.send({text})// definisco COSA PASSARE attraverso la definizioned di un oggetto che verrà automticamente trasformato in json dalla suite "supertest"
 		//iniziano le assertion da effettuare sulla request appena fatto
 		.expect(200)// verifico l'avvenuta risposta
@@ -44,6 +45,7 @@ describe('POST /todos', () => {
 	it('Non deve Creare una nuova attività con un data body invalido', (done) => {
 		request(app)
 		.post('/todos')
+		.set('x-auth',users[0].tokens[0].token) //Autenticazione attraverso il token
 		.send({})
 		.expect(400)
 		.end((err, res) => {
@@ -64,9 +66,10 @@ describe('GET /todos', () => {
 	it('Dovrei avere tutti i todos', (done) => {
 		request(app)
 		.get('/todos')
+		.set('x-auth',users[0].tokens[0].token)
 		.expect(200)
 		.expect((res) => {
-			expect(res.body.todos.length).toBe(2)
+			expect(res.body.todos.length).toBe(1)
 		})
 		.end(done);
 	})
@@ -76,9 +79,9 @@ describe('GET /todos', () => {
 describe('GET /todos:id', () => {
 
 	it('Restituisce un documento in base all\'id', (done) => {
-
 		request(app)
 		.get(`/todos/${todos[0]._id.toHexString()}`)//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
+		.set('x-auth',users[0].tokens[0].token)
 		.expect(200)
 		.expect((res) => {
 			expect(res.body.todo.text).toBe(todos[0].text);
@@ -86,12 +89,19 @@ describe('GET /todos:id', () => {
 		.end(done);
 	});
 
-
+	it('Non Restituisce un documento in base all\'id creato da un \'altro utente', (done) => {
+		request(app)
+		.get(`/todos/${todos[1]._id.toHexString()}`)//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
+		.set('x-auth',users[0].tokens[0].token)
+		.expect(404)
+		.end(done);
+	});
 
 	it('Documento non trovato 404', (done) => {
 		var hexId = new ObjectId().toHexString();
 		request(app)
 		.get(`/todos/${hexId}`)
+		.set('x-auth',users[0].tokens[0].token)
 		.expect(404)
 		.end(done);
 
@@ -100,6 +110,7 @@ describe('GET /todos:id', () => {
 	it('Documento non trovato id non valido 404', (done) => {
 		request(app)
 		.get('/todos/123abc')
+		.set('x-auth',users[0].tokens[0].token)
 		.expect(404)
 		.end(done);
 	});
@@ -110,9 +121,9 @@ describe('GET /todos:id', () => {
 describe('DELETE /todos/:id', () => {
 	it('Dovrebbe cancellare il documento', (done) => {
 		var hexId = todos[1]._id.toHexString();
-
 		request(app)
 		.delete(`/todos/${hexId}`)
+		.set('x-auth',users[1].tokens[0].token)
 		.expect(200)
 		.expect((res)=> {
 			expect(res.body.todo._id).toBe(hexId);
@@ -122,7 +133,24 @@ describe('DELETE /todos/:id', () => {
 				return done(err);
 			}
 			Todo.findById(hexId).then((todo) => {
-				expect(todo).toBeFalsy();
+				expect(todo).toNotExist();
+				done();
+			}).catch((e) => done(e));
+		})
+	});
+
+	it('Non Dovrebbe cancellare il documento di un\'altro', (done) => {
+		var hexId = todos[0]._id.toHexString();
+		request(app)
+		.delete(`/todos/${hexId}`)
+		.set('x-auth',users[1].tokens[0].token)
+		.expect(404)
+		.end((err, res) => {
+			if(err) {
+				return done(err);
+			}
+			Todo.findById(hexId).then((todo) => {
+				expect(todo).toExist();
 				done();
 			}).catch((e) => done(e));
 		})
@@ -132,6 +160,7 @@ describe('DELETE /todos/:id', () => {
 		var hexId = new ObjectId().toHexString();
 		request(app)
 		.delete(`/todos/${hexId}`)
+		.set('x-auth',users[1].tokens[0].token)
 		.expect(404)
 		.end(done);
 
@@ -140,6 +169,7 @@ describe('DELETE /todos/:id', () => {
 	it('Restituisce 404 se l\'id non è valido', (done) => {
 		request(app)
 		.delete('/todos/123abc')
+		.set('x-auth',users[1].tokens[0].token)
 		.expect(404)
 		.end(done);
 	});
@@ -153,6 +183,7 @@ describe('PATCH /todos/:id', () => {
 		var text = 'nuovo testo del TEST';
 		request(app)
 		.patch(`/todos/${hexId}`)
+		.set('x-auth',users[0].tokens[0].token)
 		.send({
 			completed: true,
 			text
@@ -166,12 +197,23 @@ describe('PATCH /todos/:id', () => {
 		.end(done);
 	});
 
+	it('Non Dovrebbe aggiornare todo di un\'altro utente', (done) => {
+		var hexId = todos[0]._id.toHexString();
+		var text = 'nuovo testo del TEST';
+		request(app)
+		.patch(`/todos/${hexId}`)
+		.set('x-auth',users[1].tokens[0].token)
+		.expect(404)
+		.end(done);
+	});
+
 
 	it('Dovrebbe cancellare completedAt se il task non è completo', (done) => {
 		var hexId = todos[1]._id.toHexString();
 		var text = 'nuovo testo del TEST!!!';
 		request(app)
 		.patch(`/todos/${hexId}`)
+		.set('x-auth',users[1].tokens[0].token)
 		.send({
 			completed: false,
 			text
@@ -287,7 +329,7 @@ describe('POST /users/login', () => {
 				done(err);
 			}
 			Users.findById(users[1]._id).then((user)=>{
-				expect(user.tokens[0]).toInclude({
+				expect(user.tokens[1]).toInclude({
 					access: 'auth',
 					token: res.header['x-auth']
 				})
@@ -297,7 +339,7 @@ describe('POST /users/login', () => {
 
 	});
 
-	it('dovrebbe rifiutare il login', (done) => {
+	it('dovrebbe rifiutare il login invalid password', (done) => {
 		request(app)
 		.post('/users/login')
 		.send({
@@ -312,8 +354,8 @@ describe('POST /users/login', () => {
 			if (err) {
 				done(err);
 			}
-			Users.findById(users[1]._id).then((user)=>{
-				expect(user.tokens.length).toBe(0);
+			Users.findById(users[1]._id).then((user) => {
+				expect(user.tokens.length).toBe(1);
 				done();
 			}).catch( (e) => done(e));
 		})
@@ -322,19 +364,20 @@ describe('POST /users/login', () => {
 
 describe('DELETE /users/me/tokens',() => {
 
-	it('Cancella token sul log out', (done) => {
+	it('Cancella token', (done) => {
 
 		request(app)
 		.delete('/users/me/token')
 		.set('x-auth', users[0].tokens[0].token)
 		.expect(200)
 		.end((err, res) => {
-
-			Users.findById(users[0]._id).then((user)=>{
+			if(err) {
+				return done(err);
+			}
+			Users.findById(users[0]._id).then((user) => {
 				expect(user.tokens.length).toBe(0);
 				done();
 			}).catch( (e) => done(e));
-
 		});
 	})
 })
