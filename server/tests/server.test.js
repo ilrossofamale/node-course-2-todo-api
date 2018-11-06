@@ -10,7 +10,6 @@ const {Users} = require('./../models/users'); //chiamo i file locali
 const {todos,populateTodos,users,populateUsers}  = require('./seed/seed.js'); //chiamo i file locali
 
 
-
 //creo i dummy secondo le impostazioni dei modelli
 beforeEach(populateUsers);
 beforeEach(populateTodos);
@@ -206,7 +205,6 @@ describe('PATCH /todos/:id', () => {
 		.expect(404)
 		.end(done);
 	});
-
 
 	it('Dovrebbe cancellare completedAt se il task non è completo', (done) => {
 		var hexId = todos[1]._id.toHexString();
