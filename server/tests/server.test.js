@@ -1,13 +1,13 @@
-const expect = require('expect'); //invoco il modulo per i test
-const request = require('supertest'); //invoco il modulo per le asserzioni sui test
+const expect = require('expect'); 																		//invoco il modulo per i test
+const request = require('supertest'); 																	//invoco il modulo per le asserzioni sui test
 const {ObjectId} = require('mongodb');
 
 
 
-const {app} = require('./../server'); //chiamo i file locali
-const {Todo} = require('./../models/todo'); //chiamo i file locali
-const {Users} = require('./../models/users'); //chiamo i file locali
-const {todos,populateTodos,users,populateUsers}  = require('./seed/seed.js'); //chiamo i file locali
+const {app} = require('./../server'); 																	//chiamo i file locali
+const {Todo} = require('./../models/todo'); 															//chiamo i file locali
+const {Users} = require('./../models/users'); 															//chiamo i file locali
+const {todos,populateTodos,users,populateUsers}  = require('./seed/seed.js'); 							//chiamo i file locali
 
 
 //creo i dummy secondo le impostazioni dei modelli
@@ -16,26 +16,26 @@ beforeEach(populateTodos);
 
 //I TEST!!!
 describe('POST /todos', () => {
-	it('Crea una nuova attività', (done) => {// il parametro done va passato perchè viene utilizzzato per funzioni di tipo asincrono altrimenti il test finisce in maniera sincrona e non viene eseguito
+	it('Crea una nuova attività', (done) => {															// il parametro done va passato perchè viene utilizzzato per funzioni di tipo asincrono altrimenti il test finisce in maniera sincrona e non viene eseguito
 		var text = 'TEST attività testo';
 		//request del test
-		request(app)// request verso l'oggetto app esportato da server.js che devo testare
-		.post('/todos') // URL a cui PASSARE I DATI
-		.set('x-auth',users[0].tokens[0].token) //Autenticazione attraverso il token
-		.send({text})// definisco COSA PASSARE attraverso la definizioned di un oggetto che verrà automticamente trasformato in json dalla suite "supertest"
+		request(app)																					// request verso l'oggetto app esportato da server.js che devo testare
+		.post('/todos') 																				// URL a cui PASSARE I DATI
+		.set('x-auth',users[0].tokens[0].token)															//Autenticazione attraverso il token
+		.send({text})																					// definisco COSA PASSARE attraverso la definizioned di un oggetto che verrà automticamente trasformato in json dalla suite "supertest"
 		//iniziano le assertion da effettuare sulla request appena fatto
-		.expect(200)// verifico l'avvenuta risposta
-		.expect((res) => {// crea una assertion da effettuare sul corpo della risposta
-			expect(res.body.text).toBe(text); //metodo definito in supertest
+		.expect(200)																					// verifico l'avvenuta risposta
+		.expect((res) => {																				// crea una assertion da effettuare sul corpo della risposta
+			expect(res.body.text).toBe(text); 															//metodo definito in supertest
 		})
-		.end((err, res) => { //invece della classica chiusura "done" eseguo una funzione che interroga il db per verificare cosa sia stato scritto nella collection di mongo db
+		.end((err, res) => { 																			//invece della classica chiusura "done" eseguo una funzione che interroga il db per verificare cosa sia stato scritto nella collection di mongo db
 			if(err) {
-				return done(err);//se presente un errore chido il test e mi facio restituire il tipo di errore
+				return done(err);																		//se presente un errore chido il test e mi facio restituire il tipo di errore
 			}
 			//eseguo una richiesta al db per verificare l'inserimento
-			Todo.find({text}).then((todos) => {//cerco il testo specifico
-				expect(todos.length).toBe(1);//verifico che ne sia stata inserita una (per far funzionare questa assertion bisogna che il DB sia sempre vuoto quindi definisco la funzione beforeEach a riga 19)
-				expect(todos[0].text).toBe(text);//verifico che l'ultimo testo inserito sia il testo utilizzato lungo il test
+			Todo.find({text}).then((todos) => {															//cerco il testo specifico
+				expect(todos.length).toBe(1);															//verifico che ne sia stata inserita una (per far funzionare questa assertion bisogna che il DB sia sempre vuoto quindi definisco la funzione beforeEach a riga 19)
+				expect(todos[0].text).toBe(text);														//verifico che l'ultimo testo inserito sia il testo utilizzato lungo il test
 				done();
 
 			}).catch((e) => done(e));
@@ -44,7 +44,7 @@ describe('POST /todos', () => {
 	it('Non deve Creare una nuova attività con un data body invalido', (done) => {
 		request(app)
 		.post('/todos')
-		.set('x-auth',users[0].tokens[0].token) //Autenticazione attraverso il token
+		.set('x-auth',users[0].tokens[0].token) 														//Autenticazione attraverso il token
 		.send({})
 		.expect(400)
 		.end((err, res) => {
@@ -79,7 +79,7 @@ describe('GET /todos:id', () => {
 
 	it('Restituisce un documento in base all\'id', (done) => {
 		request(app)
-		.get(`/todos/${todos[0]._id.toHexString()}`)//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
+		.get(`/todos/${todos[0]._id.toHexString()}`)														//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
 		.set('x-auth',users[0].tokens[0].token)
 		.expect(200)
 		.expect((res) => {
@@ -90,7 +90,7 @@ describe('GET /todos:id', () => {
 
 	it('Non Restituisce un documento in base all\'id creato da un \'altro utente', (done) => {
 		request(app)
-		.get(`/todos/${todos[1]._id.toHexString()}`)//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
+		.get(`/todos/${todos[1]._id.toHexString()}`)														//todos[0]._id è un oggetto, il metodo toHexString lo converte (mongodb reference)
 		.set('x-auth',users[0].tokens[0].token)
 		.expect(404)
 		.end(done);
@@ -132,7 +132,7 @@ describe('DELETE /todos/:id', () => {
 				return done(err);
 			}
 			Todo.findById(hexId).then((todo) => {
-				expect(todo).toNotExist();
+				expect(todo).toBeFalsy();
 				done();
 			}).catch((e) => done(e));
 		})
@@ -149,7 +149,7 @@ describe('DELETE /todos/:id', () => {
 				return done(err);
 			}
 			Todo.findById(hexId).then((todo) => {
-				expect(todo).toExist();
+				expect(todo).toBeTruthy();
 				done();
 			}).catch((e) => done(e));
 		})
@@ -191,7 +191,8 @@ describe('PATCH /todos/:id', () => {
 		.expect((res) => {
 			expect(res.body.todo.text).toBe(text);
 			expect(res.body.todo.completed).toBe(true);
-			expect(res.body.todo.completedAt).toBeA('number');
+			//expect(res.body.todo.completedAt).toBeA('number');
+			expect(typeof res.body.todo.completedAt).toBe('number');
 		})
 		.end(done);
 	});
@@ -220,7 +221,7 @@ describe('PATCH /todos/:id', () => {
 		.expect((res) => {
 			expect(res.body.todo.text).toBe(text);
 			expect(res.body.todo.completed).toBe(false);
-			expect(res.body.todo.completedAt).toNotExist();
+			expect(res.body.todo.completedAt).toBeFalsy();
 		})
 		.end(done);
 	});
@@ -232,7 +233,7 @@ describe('GET /users/me', () => {
 	it('Restituisce se l\'utene è autenticato', (done) => {
 		request(app)
 		.get('/users/me')
-		.set('x-auth',users[0].tokens[0].token)//se utente è autenticato ha settato questo parametro
+		.set('x-auth',users[0].tokens[0].token)														//se utente è autenticato ha settato questo parametro
 		.expect(200)
 		.expect((res) => {
 			expect(res.body._id).toBe(users[0]._id.toHexString());
@@ -265,8 +266,8 @@ describe('POST /users', () => {
 		.send({email,password})
 		.expect(200)
 		.expect((res) => {
-			expect(res.headers['x-auth']).toExist();
-			expect(res.body._id).toExist();
+			expect(res.headers['x-auth']).toBeTruthy();
+			expect(res.body._id).toBeTruthy();
 			expect(res.body.email).toBe(email);
 		})
 		.end((err) => {
@@ -275,8 +276,8 @@ describe('POST /users', () => {
 				return done(err);
 			}
 			Users.findOne({email}).then((user) => {
-				expect(user).toExist();
-				expect(user.password).toNotBe(password);//confronto la variabile password con la password salvata per verificare che quella nel db sia codificata
+				expect(user).toBeTruthy();
+				expect(user.password).not.toBe(password);											//confronto la variabile password con la password salvata per verificare che quella nel db sia codificata
 				done();
 			}).catch( (e) => done(e));
 		});
@@ -320,14 +321,14 @@ describe('POST /users/login', () => {
 		})
 		.expect(200)
 		.expect((res) => {
-			expect(res.header['x-auth']).toExist();
+			expect(res.header['x-auth']).toBeTruthy();
 		})
 		.end((err, res) => {
 			if (err) {
 				done(err);
 			}
 			Users.findById(users[1]._id).then((user)=>{
-				expect(user.tokens[1]).toInclude({
+				expect(user.toObject().tokens[1]).toMatchObject({									//Devo usare il metodo toObject() perche la nuova libreria expect confronta gli object quindi ho bisogno della versione RAW dell'oggetto user
 					access: 'auth',
 					token: res.header['x-auth']
 				})
@@ -346,7 +347,7 @@ describe('POST /users/login', () => {
 		})
 		.expect(400)
 		.expect((res) => {
-			expect(res.header['x-auth']).toNotExist();
+			expect(res.header['x-auth']).toBeFalsy();
 		})
 		.end((err, res) => {
 			if (err) {

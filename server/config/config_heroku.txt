@@ -1,0 +1,6 @@
+IN 	HEROKU
+--Da Command prompt/Git Bash--
+heroku config 							---- per vedere le variabili nel file di configurazione
+heroku config:set NOME=VALORE 			---- settare una chiave col ripsttivo VALORE
+heroku config:get NOME 					---- vederen ilvalore di una chiave
+herolu config:unset NOME 				---- rimuovere la chiave
